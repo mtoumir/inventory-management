@@ -21,14 +21,14 @@ model Users {
 
 model Materials {
   codeSAP String @id
-  designation String
-  unit String
-  type String
-  PU Float
-  quantity Float
-  cout Float
-  imputation String
-  desImputation String
+  designation String?
+  unit String?
+  typeArticle String?
+  PU Float?
+  quantity Int?
+  cout Float?
+  imputation String?
+  desImputation String?
   sorties Sorties[]
 }
 
@@ -36,7 +36,7 @@ model Sorties {
   sortieId String @id
   codeSAP String
   timeStamp DateTime
-  quantity Float
+  quantity Int
   material Materials @relation(fields: [codeSAP], references: [codeSAP])
   productions Productions[]
 }
@@ -46,18 +46,20 @@ model Productions {
   sortieId String
   codeSAP String
   timeStamp DateTime
-  quantity Float
+  quantity Int
   sortie Sorties @relation(fields: [sortieId], references: [sortieId])
 }
 
-model SortiesHistory {
-  historyId String @id
+model SortiesSummary {
+  sortieSummaryId String @id
+  sortietotalQuantity Int
   date DateTime
 }
 
-model ProductionsHistory {
-  historyId String @id
-  timeStamp DateTime
+model ProductionsSummary {
+  productionSummaryId String @id
+  productiontotalQuantity Int
+  date DateTime
 }
 
 
