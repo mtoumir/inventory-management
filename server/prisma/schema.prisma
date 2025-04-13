@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,54 +8,66 @@ datasource db {
 }
 
 model Users {
-  userId String @id
+  userId String @id @default(uuid())
   name   String
-  email  String 
-}
+  email  String
 
-model Materials {
-  codeSAP String @id
-  designation String?
-  unit String?
-  typeArticle String?
-  PU Float?
-  quantity Int?
-  cout Float?
-  imputation String?
-  desImputation String?
-  sorties Sorties[]
-}
-
-model Sorties {
-  sortieId String @id
-  codeSAP String
-  timeStamp DateTime
-  quantity Int
-  material Materials @relation(fields: [codeSAP], references: [codeSAP])
+  sorties     Sorties[]
   productions Productions[]
 }
 
+model Materials {
+  codeSAP       String    @id
+  designation   String?
+  unit          String?
+  typeArticle   String?
+  PU            Float?      // Prix Unitaire
+  quantity      Int?        // Stock quantity
+  cout          Float?      // Coût total
+  imputation    String?
+  desImputation String?
+  
+  sorties       Sorties[] @relation("MaterialSorties")
+}
+
+model Sorties {
+  sortieId   String    @id @default(uuid())
+  codeSAP    String
+  quantity   Int?
+  timeStamp  DateTime? @default(now())
+
+  // Relations
+  material   Materials @relation("MaterialSorties", fields: [codeSAP], references: [codeSAP])
+  productions Productions[]
+  
+  userId     String?
+  user       Users?    @relation(fields: [userId], references: [userId])
+}
+
 model Productions {
-  productionId String @id
-  sortieId String
-  codeSAP String
-  timeStamp DateTime
-  quantity Int
-  sortie Sorties @relation(fields: [sortieId], references: [sortieId])
+  productionId String    @id @default(uuid())
+  sortieId     String
+  timeStamp    DateTime? @default(now())
+  quantity     Int?      // Quantity produced
+  wasteQuantity Int?     // Optional: quantity of waste or rejects
+  codeSAP      String?   // Optional: redundant, consider removing if unused
+
+  // Relations
+  sortie       Sorties  @relation(fields: [sortieId], references: [sortieId])
+  userId       String?
+  user         Users?   @relation(fields: [userId], references: [userId])
 }
 
 model SortiesSummary {
-  sortieSummaryId String @id
-  sortietotalQuantity Int
-  date DateTime
+  sortieSummaryId       String   @id @default(uuid())
+  sortieTotalQuantity   Int?
+  sortieChangePercentage Float?
+  date                  DateTime? @default(now())
 }
 
 model ProductionsSummary {
-  productionSummaryId String @id
-  productiontotalQuantity Int
-  date DateTime
+  productionSummaryId        String   @id @default(uuid())
+  productionTotalQuantity    Int?
+  productionChangePercentage Float?
+  date                       DateTime? @default(now())
 }
-
-
-
-

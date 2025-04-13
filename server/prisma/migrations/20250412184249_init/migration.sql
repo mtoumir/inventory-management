@@ -1,0 +1,20 @@
+-- AlterTable
+ALTER TABLE "Productions" ADD COLUMN     "userId" TEXT,
+ADD COLUMN     "wasteQuantity" INTEGER,
+ALTER COLUMN "timeStamp" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "ProductionsSummary" ALTER COLUMN "date" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "Sorties" ADD COLUMN     "userId" TEXT,
+ALTER COLUMN "timeStamp" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "SortiesSummary" ALTER COLUMN "date" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AddForeignKey
+ALTER TABLE "Sorties" ADD CONSTRAINT "Sorties_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Productions" ADD CONSTRAINT "Productions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("userId") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -6,10 +6,14 @@ const prisma = new PrismaClient();
 export const getDashboardMetrics = async (req: Request, res: Response): Promise<void> => {
     try {
         const popularMaterials = await prisma.materials.findMany({
-            take: 15,
             orderBy: {
-                quantity: "desc",
+                quantity: "asc",
             },
+            select: {
+                codeSAP: true,
+                designation: true,
+                quantity: true, 
+              },
         });
         const sortieSummary = await prisma.sortiesSummary.findMany({
             take: 5,

@@ -112,9 +112,9 @@ const Sidebar = () => {
           isCollapsed={isSidebarCollapsed}
         />
         <SidebarLink
-          href="/products"
+          href="/materials"
           icon={Clipboard}
-          label="Products"
+          label="Materials"
           isCollapsed={isSidebarCollapsed}
         />
         <SidebarLink
@@ -127,12 +127,6 @@ const Sidebar = () => {
           href="/settings"
           icon={SlidersHorizontal}
           label="Settings"
-          isCollapsed={isSidebarCollapsed}
-        />
-        <SidebarLink
-          href="/expenses"
-          icon={CircleDollarSign}
-          label="Expenses"
           isCollapsed={isSidebarCollapsed}
         />
       </div>
