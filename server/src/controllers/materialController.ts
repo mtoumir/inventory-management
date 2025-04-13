@@ -64,3 +64,15 @@ export const updateMaterial = async (req: Request, res: Response): Promise<void>
         res.status(500).json({ message: 'Error updating material' });
     }
 }
+
+export const deleteMaterial = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { codeSAP } = req.params;
+        await prisma.materials.delete({
+            where: { codeSAP },
+        });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting material' });
+    }
+}

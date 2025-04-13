@@ -83,6 +83,14 @@ export const api = createApi({
       }),
       invalidatesTags: ['Materials'],
     }),
+
+    deleteMaterial: build.mutation<void, string>({
+      query: (codeSAP) => ({
+        url: `/materials/${codeSAP}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Materials'],
+    }),
   }),
 });
 
@@ -90,4 +98,6 @@ export const {
   useGetDashboardMetricsQuery,
   useGetMaterialsQuery,
   useCreateMaterialMutation,
+  useUpdateMaterialMutation,
+  useDeleteMaterialMutation,
 } = api;
