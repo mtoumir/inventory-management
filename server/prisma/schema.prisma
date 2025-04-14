@@ -7,56 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Users {
-  userId String @id @default(uuid())
-  name   String
-  email  String
-
-  sorties     Sorties[]
-  productions Productions[]
-}
 
 model Materials {
-  codeSAP       String    @id
+  codeSAP       String    @id @unique
   designation   String?
   unit          String?
   typeArticle   String?
-  PU            Float?      // Prix Unitaire
-  quantity      Int?        // Stock quantity
-  cout          Float?      // Coût total
+  PU            Float?    // Prix Unitaire
+  quantity      Int?      // Stock quantity
+  cout          Float?    // Coût total
   imputation    String?
   desImputation String?
-  
+
   sorties       Sorties[] @relation("MaterialSorties")
 }
 
 model Sorties {
-  sortieId   String    @id @default(uuid())
-  codeSAP    String
-  quantity   Int?
-  timeStamp  DateTime? @default(now())
-
-  // Relations
-  material   Materials @relation("MaterialSorties", fields: [codeSAP], references: [codeSAP])
+  sortieId   String     @id @default(uuid())
+  codeSAP    String     // FK to Materials
+  quantity   Int?       
+  timeStamp  DateTime?  @default(now())
+  userName   String?
+  material   Materials  @relation("MaterialSorties", fields: [codeSAP], references: [codeSAP])
   productions Productions[]
-  
-  userId     String?
-  user       Users?    @relation(fields: [userId], references: [userId])
 }
 
 model Productions {
-  productionId String    @id @default(uuid())
-  sortieId     String
-  timeStamp    DateTime? @default(now())
-  quantity     Int?      // Quantity produced
-  wasteQuantity Int?     // Optional: quantity of waste or rejects
-  codeSAP      String?   // Optional: redundant, consider removing if unused
+  productionId  String     @id @default(uuid())
+  sortieId      String     // FK to Sorties
+  quantity      Int?       // Quantity produced
+  wasteQuantity Int?       // Optional: waste or rejects
+  timeStamp     DateTime?  @default(now())
 
-  // Relations
-  sortie       Sorties  @relation(fields: [sortieId], references: [sortieId])
-  userId       String?
-  user         Users?   @relation(fields: [userId], references: [userId])
+  sortie        Sorties    @relation(fields: [sortieId], references: [sortieId])
 }
+
 
 model SortiesSummary {
   sortieSummaryId       String   @id @default(uuid())
