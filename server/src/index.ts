@@ -5,7 +5,6 @@ import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import dashboardRoutes from './routes/dashboardRoutes';
 import materialRoutes from './routes/materialRoutes';
 import sortieRoutes from './routes/sortieRoutes';
 import productionRoutes from './routes/productionRoutes';
@@ -20,7 +19,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
-app.use("/dashboard", dashboardRoutes);
 app.use("/materials", materialRoutes);
 app.use("/sorties", sortieRoutes);
 app.use("/productions", productionRoutes);

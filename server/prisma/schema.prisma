@@ -43,16 +43,4 @@ model Productions {
 }
 
 
-model SortiesSummary {
-  sortieSummaryId       String   @id @default(uuid())
-  sortieTotalQuantity   Int?
-  sortieChangePercentage Float?
-  date                  DateTime? @default(now())
-}
 
-model ProductionsSummary {
-  productionSummaryId        String   @id @default(uuid())
-  productionTotalQuantity    Int?
-  productionChangePercentage Float?
-  date                       DateTime? @default(now())
-}

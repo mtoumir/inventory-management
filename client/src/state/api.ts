@@ -52,25 +52,7 @@ export interface NewProduction {
   wasteQuantity?: number;
 }
 
-export interface SortiesSummary {
-  sortieSummaryId: string;
-  sortieTotalQuantity?: number;
-  sortieChangePercentage?: number;
-  date?: string;
-}
 
-export interface ProductionSummary {
-  productionSummaryId: string;
-  productionTotalQuantity?: number;
-  productionChangePercentage?: number;
-  date?: string;
-}
-
-export interface DashboardMetrics {
-  popularMaterials: Material[];
-  sortiesSummary: SortiesSummary[];
-  productionSummary: ProductionSummary[];
-}
 
 // ========================
 // API Slice
@@ -85,10 +67,7 @@ export const api = createApi({
     // ========================
     // Dashboard
     // ========================
-    getDashboardMetrics: build.query<DashboardMetrics, void>({
-      query: () => '/dashboard',
-      providesTags: ['DashboardMetrics'],
-    }),
+
 
     // ========================
     // Materials
@@ -181,7 +160,6 @@ export const api = createApi({
 // ========================
 
 export const {
-  useGetDashboardMetricsQuery,
   useGetMaterialsQuery,
   useCreateMaterialMutation,
   useUpdateMaterialMutation,
