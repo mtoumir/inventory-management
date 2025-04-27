@@ -52,7 +52,23 @@ export interface NewProduction {
   wasteQuantity?: number;
 }
 
+export interface Shift {
+  defaultPerShiftId: string; 
+  shift?: number;
+  timeStamp: string;
+  category?: string;
+  problem?: string;
+  numbWasted?: number;
+}
 
+
+export interface NewShift {
+  shift?: number;
+  category?: string;
+  problem?: string;
+  numbWasted?: number;
+  timeStamp?: string; 
+}
 
 // ========================
 // API Slice
@@ -62,12 +78,11 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
   }),
-  tagTypes: ['DashboardMetrics', 'Materials', 'Sorties', 'Productions'],
+  tagTypes: ['DashboardMetrics', 'Materials', 'Sorties', 'Productions', 'Shifts'],
   endpoints: (build) => ({
     // ========================
     // Dashboard
     // ========================
-
 
     // ========================
     // Materials
@@ -143,7 +158,6 @@ export const api = createApi({
       invalidatesTags: ['Productions', 'DashboardMetrics', 'Materials'],
     }),
 
-    // Add the updateProduction mutation here
     updateProduction: build.mutation<Production, Partial<Production> & { productionId: string }>({
       query: ({ productionId, ...patch }) => ({
         url: `/productions/${productionId}`,
@@ -152,14 +166,34 @@ export const api = createApi({
       }),
       invalidatesTags: ['Productions', 'DashboardMetrics', 'Materials'],
     }),
+
+    // ========================
+    // Shifts
+    // ========================
+    getShifts: build.query<Shift[], void>({
+      query: () => '/shifts',
+      providesTags: ['Shifts'],
+    }),
+    
+    createShift: build.mutation<Shift, NewShift>({
+      query: (newShift) => ({
+        url: '/shifts',
+        method: 'POST',
+        body: {
+          ...newShift,
+          timeStamp: newShift.timeStamp || new Date().toISOString(),
+        },
+      }),
+      invalidatesTags: ['Shifts', 'DashboardMetrics'],
+    }),
   }),
 });
 
 // ========================
 // Exported Hooks
 // ========================
-
 export const {
+  useCreateShiftMutation,
   useGetMaterialsQuery,
   useCreateMaterialMutation,
   useUpdateMaterialMutation,
@@ -168,5 +202,6 @@ export const {
   useCreateSortieMutation,
   useGetProductionsQuery,
   useCreateProductionMutation,
-  useUpdateProductionMutation,  // Export the hook for updateProduction
+  useUpdateProductionMutation,
+  useGetShiftsQuery,
 } = api;

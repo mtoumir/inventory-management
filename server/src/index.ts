@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import materialRoutes from './routes/materialRoutes';
 import sortieRoutes from './routes/sortieRoutes';
 import productionRoutes from './routes/productionRoutes';
+import shiftRoutes from './routes/shiftRoutes';
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ app.use(cors());
 app.use("/materials", materialRoutes);
 app.use("/sorties", sortieRoutes);
 app.use("/productions", productionRoutes);
+app.use("/shifts", shiftRoutes);
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {

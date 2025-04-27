@@ -32,7 +32,7 @@ const Navbar = () => {
       <div className="flex justify-between items-center gap-5">
         <div className="hidden md:flex justify-between items-center gap-5">
           <div className="flex items-center gap-3 cursor-pointer">
-            <span className="font-semibold text-xl">Welcome Fati</span>
+            <span className="font-semibold text-xl">Welcome</span>
           </div>
         </div>
       </div>

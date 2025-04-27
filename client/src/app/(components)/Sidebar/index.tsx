@@ -124,6 +124,12 @@ const Sidebar = () => {
           label="Productions"
           isCollapsed={isSidebarCollapsed}
         />
+        <SidebarLink
+          href="/wastedPerShift"
+          icon={SlidersHorizontal}
+          label="Wasted Per Shift"
+          isCollapsed={isSidebarCollapsed}
+        />
       </div>
 
       {/* FOOTER */}

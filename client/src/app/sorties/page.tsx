@@ -139,7 +139,7 @@ const Sorties = () => {
           <table className="min-w-full divide-y divide-gray-200 bg-white text-sm text-left">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-6 py-3 font-semibold">ID Sortie</th>
+                <th className="px-6 py-3 font-semibold">Sortie ID</th>
                 <th className="px-6 py-3 font-semibold">Désignation</th>
                 <th className="px-6 py-3 font-semibold">Code SAP</th>
                 <th className="px-6 py-3 font-semibold">Quantité</th>
