@@ -52,22 +52,28 @@ export interface NewProduction {
   wasteQuantity?: number;
 }
 
-export interface Shift {
-  defaultPerShiftId: string; 
-  shift?: number;
-  timeStamp: string;
-  category?: string;
-  problem?: string;
-  numbWasted?: number;
+export interface WastedEntry {
+  category: 'PRODUCTION' | 'MAINTENANCE' | 'OTHER';
+  problem: 'MACHINE' | 'MATERIAL' | 'OTHER';
+  Quantity: number;
 }
 
+export interface Shift {
+  id: string;
+  shiftType: 'MORNING' | 'MIDDAY' | 'NIGHT';
+  date: string;
+  technicien?: string;
+  totalWasted: number;
+  createdAt: string;
+  wastedEntries: WastedEntry[];
+}
 
 export interface NewShift {
-  shift?: number;
-  category?: string;
-  problem?: string;
-  numbWasted?: number;
-  timeStamp?: string; 
+  shiftType: 'MORNING' | 'MIDDAY' | 'NIGHT';
+  date: string;
+  technicien?: string;
+  totalWasted?: number; 
+  wastedEntries: WastedEntry[];
 }
 
 // ========================
@@ -179,13 +185,19 @@ export const api = createApi({
       query: (newShift) => ({
         url: '/shifts',
         method: 'POST',
-        body: {
-          ...newShift,
-          timeStamp: newShift.timeStamp || new Date().toISOString(),
-        },
+        body: newShift, // No need to add totalWasted or createdAt manually
       }),
       invalidatesTags: ['Shifts', 'DashboardMetrics'],
     }),
+
+    deleteShift: build.mutation<void, string>({
+      query: (id) => ({
+        url: `/shifts/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Shifts', 'DashboardMetrics'],
+    }),
+    
   }),
 });
 
@@ -204,4 +216,5 @@ export const {
   useCreateProductionMutation,
   useUpdateProductionMutation,
   useGetShiftsQuery,
+  useDeleteShiftMutation,
 } = api;

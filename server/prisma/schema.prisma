@@ -40,13 +40,43 @@ model Productions {
   sortie        Sorties    @relation(fields: [sortieId], references: [sortieId])  
 }
 
-model shiftsdefaut {
-  defaultPerShiftId          String      @id @default(uuid())
-  shift       Int?    
-  timeStamp   DateTime 
-  category    String?  
-  problem     String?  
-  numbWasted  Int?     
+model Shift {
+  id            String        @id @default(uuid())
+  shiftType     ShiftType     
+  date          DateTime      
+  technicien    String?
+  totalWasted   Int?
+  createdAt     DateTime      @default(now())
+
+
+  wastedEntries WastedEntry[]
+}
+
+model WastedEntry {
+  id         String   @id @default(uuid())
+  category   CategoryType
+  problem    ProblemType
+  Quantity     Int
+  shiftId    String
+  shift      Shift    @relation(fields: [shiftId], references: [id])
+}
+
+enum ShiftType {
+  MORNING
+  MIDDAY
+  NIGHT
+}
+
+enum CategoryType {
+  PRODUCTION
+  MAINTENANCE
+  OTHER
+}
+
+enum ProblemType {
+  MACHINE
+  MATERIAL
+  OTHER
 }
 
 

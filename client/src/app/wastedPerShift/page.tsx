@@ -1,210 +1,321 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { NewShift, useCreateShiftMutation, useGetShiftsQuery } from '@/state/api';
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  WastedEntry,
+  useGetShiftsQuery,
+  useCreateShiftMutation,
+  useDeleteShiftMutation,
+  NewShift,
+  Shift,
+} from '@/state/api';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from 'recharts';
 
-const WastedPerShift = () => {
-  const { data: shifts = [], isLoading, refetch } = useGetShiftsQuery();
-  const [createShift, { isLoading: isCreating }] = useCreateShiftMutation();
+const defaultEntry: WastedEntry = {
+  category: 'PRODUCTION',
+  problem: 'MACHINE',
+  Quantity: 0,
+};
+
+const ShiftPage = () => {
+  const { data: shifts = [], isLoading, isError } = useGetShiftsQuery();
+  const [createShift] = useCreateShiftMutation();
+  const [deleteShift] = useDeleteShiftMutation();
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [form, setForm] = useState<NewShift>({
-    shift: undefined,
-    category: '',
-    problem: '',
-    numbWasted: undefined,
-    timeStamp: '',
+    shiftType: 'MORNING',
+    date: '',
+    technicien: '',
+    wastedEntries: [defaultEntry],
   });
 
-  const [date, setDate] = useState({
-    day: '',
-    month: '',
-    year: '',
+  const [filter, setFilter] = useState({
+    shiftType: 'ALL',
+    category: 'ALL',
+    problem: 'ALL',
+    startDate: '',
+    endDate: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === 'numbWasted' || name === 'shift' ? Number(value) : value,
-    }));
-  };
+  const formatDate = useCallback((dateStr: string) => {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+  }, []);
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setDate((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setForm((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
+
+  const handleEntryChange = useCallback(
+    (index: number, field: keyof WastedEntry, value: string | number) => {
+      setForm((prev) => {
+        const entries = prev.wastedEntries.map((entry, i) =>
+          i === index ? { ...entry, [field]: value } : entry
+        );
+        return { ...prev, wastedEntries: entries };
+      });
+    },
+    []
+  );
+
+  const addWastedEntry = useCallback(
+    () =>
+      setForm((prev) => ({
+        ...prev,
+        wastedEntries: [...prev.wastedEntries, defaultEntry],
+      })),
+    []
+  );
+
+  const removeWastedEntry = useCallback(
+    (index: number) =>
+      setForm((prev) => ({
+        ...prev,
+        wastedEntries: prev.wastedEntries.filter((_, i) => i !== index),
+      })),
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Build timestamp manually from selected year, month, day
-    const { year, month, day } = date;
-    const completeTimestamp = new Date(`${year}-${month}-${day}T00:00:00`).toISOString();
-
+    if (!form.date) return setFormError('Date is required.');
+    const totalWasted = form.wastedEntries.reduce((sum, e) => sum + e.Quantity, 0);
     try {
-      await createShift({
-        ...form,
-        timeStamp: completeTimestamp,
-      }).unwrap();
-      setForm({ shift: undefined, category: '', problem: '', numbWasted: undefined, timeStamp: '' });
-      setDate({ day: '', month: '', year: '' });
-      refetch();
-    } catch (error) {
-      console.error('Failed to create shift:', error);
+      setFormError(null);
+      await createShift({ ...form, totalWasted }).unwrap();
+      setForm({ shiftType: 'MORNING', date: '', technicien: '', wastedEntries: [defaultEntry] });
+    } catch (err) {
+      console.error(err);
+      setFormError('Failed to create shift.');
     }
   };
 
+  const chartData = useMemo(() => {
+    const problemMap: Record<string, number> = {};
+
+    shifts.forEach((s) => {
+      // Shift filter
+      if (filter.shiftType !== 'ALL' && s.shiftType !== filter.shiftType) return;
+      // Date range filter
+      const shiftDate = new Date(s.date);
+      if (filter.startDate && shiftDate < new Date(filter.startDate)) return;
+      if (filter.endDate && shiftDate > new Date(filter.endDate)) return;
+
+      s.wastedEntries.forEach((entry) => {
+        // Category and problem filter must both match
+        if (filter.category !== 'ALL' && entry.category !== filter.category) return;
+        if (filter.problem !== 'ALL' && entry.problem !== filter.problem) return;
+
+        problemMap[entry.problem] = (problemMap[entry.problem] || 0) + entry.Quantity;
+      });
+    });
+
+    return Object.entries(problemMap).map(([name, wasted]) => ({ name, wasted }));
+  }, [shifts, filter]);
+
+  if (isError) return <p className="text-red-600">Error loading shifts.</p>;
+
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 p-8">
-      <h1 className="text-4xl font-bold mb-8">Wasted Per Shift</h1>
-
-      {/* Create Shift Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-full max-w-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Create New Shift</h2>
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Shift Number</label>
-          <input
-            type="number"
-            name="shift"
-            value={form.shift || ''}
-            onChange={handleChange}
-            className="mt-1 p-2 w-full border rounded"
-            placeholder="Enter shift number"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Category</label>
-          <input
-            type="text"
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="mt-1 p-2 w-full border rounded"
-            placeholder="Enter category"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Problem</label>
-          <input
-            type="text"
-            name="problem"
-            value={form.problem}
-            onChange={handleChange}
-            className="mt-1 p-2 w-full border rounded"
-            placeholder="Enter problem description"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Number Wasted</label>
-          <input
-            type="number"
-            name="numbWasted"
-            value={form.numbWasted || ''}
-            onChange={handleChange}
-            className="mt-1 p-2 w-full border rounded"
-            placeholder="Enter wasted quantity"
-          />
-        </div>
-
-        {/* Date Selection */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Select Date</label>
-          <div className="flex gap-2">
+    <div className="p-6 max-w-5xl mx-auto space-y-8">
+      {/* Create Form */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h1 className="text-2xl font-bold mb-4">Create New Shift</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select
-              name="day"
-              value={date.day}
-              onChange={handleDateChange}
-              className="p-2 border rounded w-1/3"
+              name="shiftType"
+              value={form.shiftType}
+              onChange={handleInputChange}
+              className="p-2 border rounded"
             >
-              <option value="">Day</option>
-              {Array.from({ length: 31 }, (_, i) => (
-                <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
-                  {i + 1}
-                </option>
-              ))}
+              <option value="MORNING">Morning</option>
+              <option value="MIDDAY">Midday</option>
+              <option value="NIGHT">Night</option>
             </select>
-            <select
-              name="month"
-              value={date.month}
-              onChange={handleDateChange}
-              className="p-2 border rounded w-1/3"
-            >
-              <option value="">Month</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-            <select
-              name="year"
-              value={date.year}
-              onChange={handleDateChange}
-              className="p-2 border rounded w-1/3"
-            >
-              <option value="">Year</option>
-              {Array.from({ length: 5 }, (_, i) => {
-                const currentYear = new Date().getFullYear();
-                return (
-                  <option key={i} value={currentYear - i}>
-                    {currentYear - i}
-                  </option>
-                );
-              })}
-            </select>
+            <input
+              type="date"
+              name="date"
+              value={form.date}
+              onChange={handleInputChange}
+              className="p-2 border rounded"
+            />
+            <input
+              type="text"
+              name="technicien"
+              placeholder="Technician"
+              value={form.technicien}
+              onChange={handleInputChange}
+              className="p-2 border rounded"
+            />
           </div>
+          {form.wastedEntries.map((entry, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <select
+                value={entry.category}
+                onChange={(e) => handleEntryChange(idx, 'category', e.target.value)}
+                className="p-2 border rounded"
+              >
+                <option value="PRODUCTION">Production</option>
+                <option value="MAINTENANCE">Maintenance</option>
+                <option value="OTHER">Other</option>
+              </select>
+              <select
+                value={entry.problem}
+                onChange={(e) => handleEntryChange(idx, 'problem', e.target.value)}
+                className="p-2 border rounded"
+              >
+                <option value="MACHINE">Machine</option>
+                <option value="MATERIAL">Material</option>
+                <option value="OTHER">Other</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                placeholder="Qty"
+                value={entry.Quantity}
+                onChange={(e) => handleEntryChange(idx, 'Quantity', Number(e.target.value))}
+                className="p-2 border rounded w-20"
+              />
+              <button
+                type="button"
+                onClick={() => removeWastedEntry(idx)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addWastedEntry}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            + Add Entry
+          </button>
+          {formError && <p className="text-red-600">{formError}</p>}
+          <button
+            type="submit"
+            className="block w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+          >
+            Submit Shift
+          </button>
+        </form>
+      </section>
+
+      {/* Graph Section */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h1 className="text-2xl font-bold mb-4">Wasted Graph</h1>
+        <div className="flex flex-wrap gap-3 mb-4">
+          <select
+            value={filter.shiftType}
+            onChange={(e) => setFilter((f) => ({ ...f, shiftType: e.target.value }))}
+            className="p-2 border rounded"
+          >
+            <option value="ALL">All Shifts</option>
+            <option value="MORNING">Morning</option>
+            <option value="MIDDAY">Midday</option>
+            <option value="NIGHT">Night</option>
+          </select>
+          <select
+            value={filter.category}
+            onChange={(e) => setFilter((f) => ({ ...f, category: e.target.value }))}
+            className="p-2 border rounded"
+          >
+            <option value="ALL">All Categories</option>
+            <option value="PRODUCTION">Production</option>
+            <option value="MAINTENANCE">Maintenance</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <select
+            value={filter.problem}
+            onChange={(e) => setFilter((f) => ({ ...f, problem: e.target.value }))}
+            className="p-2 border rounded"
+          >
+            <option value="ALL">All Problems</option>
+            <option value="MACHINE">Machine</option>
+            <option value="MATERIAL">Material</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input
+            type="date"
+            value={filter.startDate}
+            onChange={(e) => setFilter((f) => ({ ...f, startDate: e.target.value }))}
+            className="p-2 border rounded"
+          />
+          <input
+            type="date"
+            value={filter.endDate}
+            onChange={(e) => setFilter((f) => ({ ...f, endDate: e.target.value }))}
+            className="p-2 border rounded"
+          />
         </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="wasted" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+      </section>
 
-        <button
-          type="submit"
-          disabled={isCreating}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200"
-        >
-          {isCreating ? 'Creating...' : 'Create Shift'}
-        </button>
-      </form>
-
-      {/* Shifts List */}
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-4xl">
-        <h2 className="text-2xl font-semibold mb-4">Existing Shifts</h2>
+      {/* All Shifts Section */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h1 className="text-2xl font-bold mb-4">All Shifts</h1>
         {isLoading ? (
           <p>Loading shifts...</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="p-2 border">Shift</th>
-                  <th className="p-2 border">Category</th>
-                  <th className="p-2 border">Problem</th>
-                  <th className="p-2 border">Number Wasted</th>
-                  <th className="p-2 border">Time Stamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shifts.map((shift) => (
-                  <tr key={shift.defaultPerShiftId} className="hover:bg-gray-100">
-                    <td className="p-2 border text-center">{shift.shift ?? '-'}</td>
-                    <td className="p-2 border">{shift.category || '-'}</td>
-                    <td className="p-2 border">{shift.problem || '-'}</td>
-                    <td className="p-2 border text-center">{shift.numbWasted ?? '-'}</td>
-                    <td className="p-2 border">{new Date(shift.timeStamp).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {shifts.map((s: Shift) => (
+              <div key={s.id} className="border p-4 rounded-lg shadow hover:shadow-lg transition">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold text-lg">
+                      {s.shiftType} | {formatDate(s.date)} | Tech: {s.technicien || '-'}
+                    </p>
+                    <p className="text-gray-700">
+                      Total Wasted: <span className="font-bold">{s.totalWasted}</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deleteShift(s.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </div>
+                <ul className="mt-2 ml-4 list-disc text-gray-700">
+                  {s.wastedEntries.map((we, i) => (
+                    <li key={i}>
+                      {we.category} - {we.problem}: {we.Quantity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };
 
-export default WastedPerShift;
+export default ShiftPage;
