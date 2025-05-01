@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export const createShift = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { shiftType, date, technicien, wastedEntries } = req.body;
+    const { shiftType, ligneType, date, technicien, wastedEntries } = req.body;
 
     if (!shiftType || !date || !wastedEntries || !Array.isArray(wastedEntries) || wastedEntries.length === 0) {
       res.status(400).json({ error: 'shiftType, date, and at least one wasted entry are required' });
@@ -17,6 +17,7 @@ export const createShift = async (req: Request, res: Response): Promise<void> =>
     const newShift = await prisma.shift.create({
       data: {
         shiftType,
+        ligneType,
         date: new Date(date),
         technicien,
         totalWasted,

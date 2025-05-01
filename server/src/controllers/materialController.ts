@@ -69,7 +69,7 @@ export const deleteMaterial = async (req: Request, res: Response): Promise<void>
     try {
         const { codeSAP } = req.params;
         await prisma.materials.delete({
-            where: { codeSAP },
+            where: { codeSAP},
         });
         res.status(204).send();
     } catch (error) {
