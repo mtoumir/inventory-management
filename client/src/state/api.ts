@@ -31,6 +31,7 @@ export interface Sortie {
 }
 
 export interface NewSortie {
+  sortieId: string;
   codeSAP: string;
   quantity: number;
   userName: string;
@@ -149,6 +150,14 @@ export const api = createApi({
       invalidatesTags: ['Sorties', 'Materials', 'DashboardMetrics'],
     }),
 
+    deleteSortie: build.mutation<void, string>({
+      query: (sortieId) => ({
+        url: `/sorties/${sortieId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Sorties', 'DashboardMetrics'],
+    }),
+
     // ========================
     // Productions
     // ========================
@@ -173,6 +182,14 @@ export const api = createApi({
         body: patch,
       }),
       invalidatesTags: ['Productions', 'DashboardMetrics', 'Materials'],
+    }),
+
+    deleteProduction: build.mutation<void, string>({
+      query: (productionId) => ({
+        url: `/productions/${productionId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Productions', 'DashboardMetrics'],
     }),
 
     // ========================
@@ -214,9 +231,11 @@ export const {
   useDeleteMaterialMutation,
   useGetSortiesQuery,
   useCreateSortieMutation,
+  useDeleteSortieMutation,
   useGetProductionsQuery,
   useCreateProductionMutation,
   useUpdateProductionMutation,
+  useDeleteProductionMutation,
   useGetShiftsQuery,
   useDeleteShiftMutation,
 } = api;

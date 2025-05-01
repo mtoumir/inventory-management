@@ -6,6 +6,7 @@ import {
   useCreateProductionMutation,
   useUpdateProductionMutation,
   Production,
+  useDeleteProductionMutation
 } from '@/state/api';
 
 import { useGetSortiesQuery } from '@/state/api';  // Assuming this is the correct import for getting sorties
@@ -16,6 +17,7 @@ const Productions = () => {
   const { data: sorties, isLoading: isSortiesLoading } = useGetSortiesQuery();  // Assuming this fetches the 'sortie' data
   const [createProduction, { isLoading: isCreating }] = useCreateProductionMutation();
   const [updateProduction, { isLoading: isUpdating }] = useUpdateProductionMutation();
+  const [deleteProduction, { isLoading: isDeleting }] = useDeleteProductionMutation(); 
 
   const [formData, setFormData] = useState({
     productionId: '',
@@ -40,6 +42,23 @@ const Productions = () => {
       [name]: name === 'quantity' || name === 'wasteQuantity' ? Number(value) : value,
     }));
   };
+
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
+      null
+    );
+
+  const handleDelete = async ( id : string) => {
+    if (!confirm('Voulez-vous vraiment supprimer cette sortie ?')) return;
+    try {
+      await deleteProduction(id).unwrap();
+      setFeedback({ type: 'success', message: 'Sortie supprimée avec succès ✅' });
+      refetch();
+    } catch (err: any) {
+      console.error('Failed to delete sortie:', err);
+      setFeedback({ type: 'error', message: 'Erreur lors de la suppression de la sortie ❌' });
+    }
+    setTimeout(() => setFeedback(null), 3000);
+  }; 
 
   // Function to get the initial quantity from the sortie data
   const getSortieQuantity = (sortieId: string) => {
@@ -161,7 +180,8 @@ const Productions = () => {
                 <th className="px-6 py-3 font-semibold">Quantity</th>
                 <th className="px-6 py-3 font-semibold">Waste</th>
                 <th className="px-6 py-3 font-semibold">Timestamp</th>
-                <th className="px-6 py-3 font-semibold">Actions</th>
+                <th className="px-6 py-3 font-semibold">update</th>
+                <th className="px-6 py-3 font-semibold">delete</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -181,6 +201,19 @@ const Productions = () => {
                       className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
                     >
                       Edit
+                    </button>
+                  </td> 
+                  <td className='px-6 py-4'>             
+                  <button
+                      onClick={() => handleDelete(production.productionId)}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="animate-spin w-4 h-4" />
+                      ) : (
+                        'Supprimer'
+                      )}
                     </button>
                   </td>
                 </tr>

@@ -111,3 +111,27 @@ export const updateProduction = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteProduction = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const existingProduction = await prisma.productions.findUnique({
+      where: { productionId: id },
+    });
+
+    if (!existingProduction) {
+      res.status(404).json({ error: 'Production not found' });
+      return;
+    }
+
+    await prisma.productions.delete({
+      where: { productionId: id },
+    });
+
+    res.status(200).json({ message: 'Production deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting production:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

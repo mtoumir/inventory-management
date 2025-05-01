@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetSortiesQuery, useCreateSortieMutation } from '@/state/api';
+import { useGetSortiesQuery, useCreateSortieMutation, useDeleteSortieMutation } from '@/state/api';
 import { Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const Sorties = () => {
   const { data: sorties, isLoading, isError, refetch } = useGetSortiesQuery();
   const [createSortie, { isLoading: isCreating }] = useCreateSortieMutation();
+  const [deleteSortie, { isLoading: isDeleting }] = useDeleteSortieMutation();
 
   const [formData, setFormData] = useState({
+    sortieId: '',
     codeSAP: '',
     quantity: 1,
     userName: '',
@@ -31,13 +33,26 @@ const Sorties = () => {
     try {
       await createSortie({ ...formData }).unwrap();
       setFeedback({ type: 'success', message: 'Sortie ajoutée avec succès ✅' });
-      setFormData({ codeSAP: '', quantity: 1, userName: '' });
+      setFormData({ sortieId: '',codeSAP: '', quantity: 1, userName: '' });
       refetch();
     } catch (err: any) {
       console.error('Failed to create sortie:', err);
       setFeedback({ type: 'error', message: 'Erreur lors de l’ajout de la sortie ❌' });
     }
     setTimeout(() => setFeedback(null), 3000); // Auto-dismiss
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Voulez-vous vraiment supprimer cette sortie ?')) return;
+    try {
+      await deleteSortie(id).unwrap();
+      setFeedback({ type: 'success', message: 'Sortie supprimée avec succès ✅' });
+      refetch();
+    } catch (err: any) {
+      console.error('Failed to delete sortie:', err);
+      setFeedback({ type: 'error', message: 'Erreur lors de la suppression de la sortie ❌' });
+    }
+    setTimeout(() => setFeedback(null), 3000);
   };
 
   return (
@@ -59,8 +74,22 @@ const Sorties = () => {
       {/* Create Sortie Form */}
       <form
         onSubmit={handleSubmit}
-        className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+        className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
       >
+        <div>
+          <label htmlFor="sortieId" className="block text-sm font-medium mb-1">
+            Sortie ID
+          </label>
+          <input
+            type="text"
+            name="sortieId"
+            id="sortieId"
+            value={formData.sortieId}
+            onChange={handleChange}
+            className="border px-3 py-2 rounded w-full"
+          />
+        </div>
+
         <div>
           <label htmlFor="codeSAP" className="block text-sm font-medium mb-1">
             Code SAP
@@ -145,6 +174,7 @@ const Sorties = () => {
                 <th className="px-6 py-3 font-semibold">Quantité</th>
                 <th className="px-6 py-3 font-semibold">Utilisateur</th>
                 <th className="px-6 py-3 font-semibold">Date</th>
+                <th className="px-6 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -157,6 +187,19 @@ const Sorties = () => {
                   <td className="px-6 py-4">{sortie.userName}</td>
                   <td className="px-6 py-4">
                     {new Date(sortie.timeStamp).toLocaleString('fr-FR')}
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleDelete(sortie.sortieId)}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="animate-spin w-4 h-4" />
+                      ) : (
+                        'Supprimer'
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))}

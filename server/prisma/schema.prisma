@@ -22,22 +22,22 @@ model Materials {
 }
 
 model Sorties {
-  sortieId   String     @id @default(uuid())
+  sortieId   String     @id @unique
   codeSAP    String     // FK to Materials
   quantity   Int?       
   timeStamp  DateTime?  @default(now())
   userName   String?
   material   Materials  @relation("MaterialSorties", fields: [codeSAP], references: [codeSAP])
-  productions Productions[]
+  productions Productions[] @relation("MaterialProduit")
 }
 
 model Productions {
   productionId  String     @id @default(uuid())
-  sortieId      String     
+  sortieId      String
   quantity      Int?       
   wasteQuantity Int?       
   timeStamp     DateTime?  @default(now())
-  sortie        Sorties    @relation(fields: [sortieId], references: [sortieId])  
+  sortie        Sorties?    @relation("MaterialProduit",fields: [sortieId], references: [sortieId], onDelete: Cascade)  
 }
 
 model Shift {

@@ -74,6 +74,9 @@ CREATE TABLE "WastedEntry" (
 -- CreateIndex
 CREATE UNIQUE INDEX "Materials_codeSAP_key" ON "Materials"("codeSAP");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Sorties_sortieId_key" ON "Sorties"("sortieId");
+
 -- AddForeignKey
 ALTER TABLE "Sorties" ADD CONSTRAINT "Sorties_codeSAP_fkey" FOREIGN KEY ("codeSAP") REFERENCES "Materials"("codeSAP") ON DELETE RESTRICT ON UPDATE CASCADE;
 

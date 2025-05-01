@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // ✅ Add a sortie and decrement material quantity
 export const createSortie = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { codeSAP, quantity, userName } = req.body;
+    const {sortieId, codeSAP, quantity, userName } = req.body;
 
     if (!codeSAP || !quantity || !userName) {
       res.status(400).json({ error: 'codeSAP, quantity and userName are required' });
@@ -31,6 +31,7 @@ export const createSortie = async (req: Request, res: Response): Promise<void> =
     // 2. Create the sortie
     const sortie = await prisma.sorties.create({
       data: {
+        sortieId,
         codeSAP,
         quantity,
         userName,
@@ -73,3 +74,30 @@ export const getSorties = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteSortie = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Check if sortie exists
+    const existingSortie = await prisma.sorties.findUnique({
+      where: { sortieId: id },
+    });
+
+    if (!existingSortie) {
+      res.status(404).json({ error: 'Sortie not found' });
+      return;
+    }
+
+
+    // Delete the sortie
+    await prisma.sorties.delete({
+      where: { sortieId: id },
+    });
+
+    res.status(200).json({ message: 'Sortie deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting sortie:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
