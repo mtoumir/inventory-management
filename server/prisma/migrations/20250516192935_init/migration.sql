@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "StatusType" AS ENUM ('CLOSED', 'ONPRODUCTION');
+
+-- CreateEnum
 CREATE TYPE "LigneType" AS ENUM ('LIGNE1', 'LIGNE2');
 
 -- CreateEnum
@@ -43,6 +46,7 @@ CREATE TABLE "Productions" (
     "quantity" INTEGER,
     "wasteQuantity" INTEGER,
     "timeStamp" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "statusType" "StatusType" NOT NULL,
 
     CONSTRAINT "Productions_pkey" PRIMARY KEY ("productionId")
 );
@@ -81,7 +85,7 @@ CREATE UNIQUE INDEX "Sorties_sortieId_key" ON "Sorties"("sortieId");
 ALTER TABLE "Sorties" ADD CONSTRAINT "Sorties_codeSAP_fkey" FOREIGN KEY ("codeSAP") REFERENCES "Materials"("codeSAP") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Productions" ADD CONSTRAINT "Productions_sortieId_fkey" FOREIGN KEY ("sortieId") REFERENCES "Sorties"("sortieId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Productions" ADD CONSTRAINT "Productions_sortieId_fkey" FOREIGN KEY ("sortieId") REFERENCES "Sorties"("sortieId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WastedEntry" ADD CONSTRAINT "WastedEntry_shiftId_fkey" FOREIGN KEY ("shiftId") REFERENCES "Shift"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

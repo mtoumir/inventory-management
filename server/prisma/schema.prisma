@@ -37,7 +37,13 @@ model Productions {
   quantity      Int?       
   wasteQuantity Int?       
   timeStamp     DateTime?  @default(now())
+  statusType    StatusType
   sortie        Sorties?    @relation("MaterialProduit",fields: [sortieId], references: [sortieId], onDelete: Cascade)  
+}
+
+enum StatusType {
+  CLOSED
+  ONPRODUCTION
 }
 
 model Shift {

@@ -24,11 +24,15 @@ export const createProduction = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    const total = quantity + wasteQuantity;
+    const statusType = total === sortie.quantity ? 'CLOSED' : 'ONPRODUCTION';
+
     const production = await prisma.productions.create({
       data: {
         sortieId,
         quantity,
         wasteQuantity,
+        statusType,
       },
       include: {
         sortie: {
@@ -45,6 +49,7 @@ export const createProduction = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 /**
  * Get all productions with related sortie and material
@@ -83,6 +88,9 @@ export const updateProduction = async (req: Request, res: Response): Promise<voi
   try {
     const existingProduction = await prisma.productions.findUnique({
       where: { productionId: id },
+      include: {
+        sortie: true, // include sortie to get initialQuantity
+      },
     });
 
     if (!existingProduction) {
@@ -90,11 +98,15 @@ export const updateProduction = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    const total = quantity + wasteQuantity;
+    const statusType = total === existingProduction.sortie?.quantity ? 'CLOSED' : 'ONPRODUCTION';
+
     const updatedProduction = await prisma.productions.update({
       where: { productionId: id },
       data: {
         quantity,
         wasteQuantity,
+        statusType,
       },
       include: {
         sortie: {
@@ -111,6 +123,7 @@ export const updateProduction = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export const deleteProduction = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;

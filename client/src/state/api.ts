@@ -43,6 +43,7 @@ export interface Production {
   sortieId: string;
   quantity?: number;
   wasteQuantity?: number;
+  statusType: 'CLOSED' | 'ONPRODUCTION';
   timeStamp: string;
   sortie: Sortie;
 }
